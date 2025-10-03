@@ -29,10 +29,12 @@ export default function PaymentForm() {
   const [usdAmount, setUsdAmount] = useState<string>("");
   const [usdcAmount, setUsdcAmount] = useState<string>("0");
   const { address } = useAccount();
-const { writeContract: approveUSDC, data: approveHash } = useWriteContract();
-const { writeContract: sendPayment, data: paymentHash } = useWriteContract();
-const { isLoading: isApproving } = useWaitForTransactionReceipt({ hash: approveHash });
-const { isLoading: isPaying } = useWaitForTransactionReceipt({ hash: paymentHash });
+  const { writeContract: approveUSDC, data: approveHash } = useWriteContract();
+  const { writeContract: sendPayment, data: paymentHash } = useWriteContract();
+  const { isLoading: isApproving } = useWaitForTransactionReceipt({ hash: approveHash });
+  const { isLoading: isPaying } = useWaitForTransactionReceipt({ hash: paymentHash });
+  const { isSuccess: isApproved } = useWaitForTransactionReceipt({ hash: approveHash });
+  const { isSuccess: isPaymentComplete } = useWaitForTransactionReceipt({ hash: paymentHash });
 
   // Convert USD to USDC (1:1 for stablecoin)
   const handleAmountChange = (value: string) => {
@@ -107,24 +109,38 @@ const { isLoading: isPaying } = useWaitForTransactionReceipt({ hash: paymentHash
           </div>
 
           <div className="space-y-2">
-  <Button
+    <Button
     type="button"
     className="w-full"
     onClick={handleApprove}
-    disabled={!usdcAmount || parseFloat(usdcAmount) <= 0 || isApproving}
+    disabled={!usdcAmount || parseFloat(usdcAmount) <= 0 || isApproving || isApproved}
   >
-    {isApproving ? 'Approving...' : 'Step 1: Approve USDC'}
+    {isApproving ? 'Approving...' : isApproved ? '✓ Approved' : 'Step 1: Approve USDC'}
   </Button>
   
   <Button
-    type="button"
-    className="w-full"
-    onClick={handlePayment}
-    disabled={!approveHash || isPaying}
+  type="button"
+  className="w-full"
+  onClick={handlePayment}
+  disabled={!approveHash || isPaying || isPaymentComplete}
+  variant={isPaymentComplete ? "secondary" : "default"}
   >
-    {isPaying ? 'Processing...' : 'Step 2: Send Payment'}
+    {isPaying ? 'Processing...' : isPaymentComplete ? '✓ Payment Complete' : 'Step 2: Send Payment'}
   </Button>
 </div>
+  {isPaymentComplete && paymentHash && (
+    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+      <p className="text-green-800 font-semibold">✓ Transaction Approved!</p>
+      <a
+        href={`https://amoy.polygonscan.com/tx/${paymentHash}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-blue-600 hover:underline"
+      >
+        View on PolygonScan →
+      </a>
+    </div>
+  )}
         </form>
       </CardContent>
     </Card>
