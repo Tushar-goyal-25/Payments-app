@@ -6,6 +6,7 @@ import { useQuery } from 'convex/react'
 import { api } from '../convex/_generated/api'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import PaymentForm from '@/components /PaymentsForm'
+import WalletStatus from '@/components /WalletStatus'
 
 export default function Home() {
   return (
@@ -18,7 +19,7 @@ export default function Home() {
         </div>
         
         <Content />
-        <PaymentForm />
+        
       </Authenticated>
       <Unauthenticated>
         <SignInButton />
@@ -29,5 +30,10 @@ export default function Home() {
 
 function Content() {
   const messages = useQuery(api.messages.getForCurrentUser)
-  return <div>Authenticated content: {messages?.length}</div>
-}
+  return (
+    <div className="space-y-4">
+      <WalletStatus />
+      <PaymentForm />
+      <div>Authenticated content: {messages?.length}</div>
+    </div>
+  )}
