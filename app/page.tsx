@@ -2,13 +2,15 @@
 
 import { Authenticated, Unauthenticated } from 'convex/react'
 import { SignInButton, UserButton } from '@clerk/nextjs'
-import { useQuery } from 'convex/react'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../convex/_generated/api'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import PaymentForm from '@/components /PaymentsForm'
 import WalletStatus from '@/components /WalletStatus'
 import USDBalance from '@/components /USDBalance'
 import TransactionHistory from '@/components /TransactionHistory'
+import SendMoney from '@/components /SendMoney'
+import { useEffect } from 'react'
 
 export default function Home() {
   return (
@@ -50,6 +52,13 @@ export default function Home() {
 }
 
 function Content() {
+  const initializeUser = useMutation(api.payments.initializeUser);
+
+  // Initialize user on first load
+  useEffect(() => {
+    initializeUser().catch((err) => console.log("User already initialized"));
+  }, [initializeUser]);
+
   return (
     <div className="space-y-6">
       {/* Balance Cards Row */}
@@ -58,18 +67,14 @@ function Content() {
         <WalletStatus />
       </div>
 
-      {/* Payment Form and History Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Payment Form - Takes 1 column */}
-        <div className="lg:col-span-1">
-          <PaymentForm />
-        </div>
-
-        {/* Transaction History - Takes 2 columns */}
-        <div className="lg:col-span-2">
-          <TransactionHistory />
-        </div>
+      {/* Actions Row: Deposit + Send Money */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PaymentForm />
+        <SendMoney />
       </div>
+
+      {/* Transaction History - Full Width */}
+      <TransactionHistory />
     </div>
   )
 }

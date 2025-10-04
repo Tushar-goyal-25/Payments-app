@@ -41,10 +41,24 @@ export default function TransactionHistory() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-lg">
-                    {tx.type === 'deposit' ? '+' : '-'}${tx.amountUSD.toFixed(2)}
+                    {tx.type === 'deposit' || tx.type === 'transfer_in' ? '+' : '-'}$
+                    {Math.abs(tx.amountUSD).toFixed(2)}
                   </span>
-                  <span className="text-sm text-muted-foreground">
-                    ({tx.amountUSDC.toFixed(2)} USDC)
+                  {tx.amountUSDC > 0 && (
+                    <span className="text-sm text-muted-foreground">
+                      ({tx.amountUSDC.toFixed(2)} USDC)
+                    </span>
+                  )}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    tx.type === 'deposit' ? 'bg-blue-100 text-blue-700' :
+                    tx.type === 'transfer_in' ? 'bg-green-100 text-green-700' :
+                    tx.type === 'transfer_out' ? 'bg-orange-100 text-orange-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {tx.type === 'deposit' ? 'Deposit' :
+                     tx.type === 'transfer_in' ? 'Received' :
+                     tx.type === 'transfer_out' ? 'Sent' :
+                     tx.type}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
@@ -53,8 +67,16 @@ export default function TransactionHistory() {
                   </span>
                   <span className="text-xs text-muted-foreground">•</span>
                   <span className="text-xs text-muted-foreground">
-                    Ref: {tx.reference}
+                    {tx.reference}
                   </span>
+                  {(tx.type === 'transfer_in' || tx.type === 'transfer_out') && (
+                    <>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <span className="text-xs text-muted-foreground">
+                        {tx.type === 'transfer_out' ? `To: ${tx.recipientEmail}` : `From: ${tx.senderEmail}`}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -70,14 +92,18 @@ export default function TransactionHistory() {
                 >
                   {tx.status}
                 </span>
-                <a
-                  href={`https://amoy.polygonscan.com/tx/${tx.txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  View →
-                </a>
+                {tx.type === 'deposit' ? (
+                  <a
+                    href={`https://amoy.polygonscan.com/tx/${tx.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    View →
+                  </a>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Internal</span>
+                )}
               </div>
             </div>
           ))}

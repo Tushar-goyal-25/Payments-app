@@ -10,10 +10,12 @@ export default defineSchema({
   //user wallet balance
   userBalances: defineTable({
     userId: v.string(),        // Clerk user ID
+    email: v.optional(v.string()), // User's email for transfers
     walletAddress: v.string(), // User's connected wallet address
     usdBalance: v.number(),    // Virtual USD balance
   }).index("by_userId", ["userId"])
-    .index("by_wallet", ["walletAddress"]),
+    .index("by_wallet", ["walletAddress"])
+    .index("by_email", ["email"]),
 
     //Transaction history
     transactions: defineTable({
@@ -26,6 +28,11 @@ export default defineSchema({
     reference: v.string(),        // Invoice/order reference
     status: v.string(),           // "pending" | "completed" | "failed"
     timestamp: v.number(),        // When transaction occurred
-  }).index("by_userId", ["userId"])
-    .index("by_txHash", ["txHash"]),
+    // NEW FIELDS for transfers
+  recipientUserId: v.optional(v.string()),        // Who received the money
+  recipientEmail: v.optional(v.string()),         // Recipient's email
+  senderEmail: v.optional(v.string()),            // Sender's email
+}).index("by_userId", ["userId"])
+  .index("by_txHash", ["txHash"])
+  .index("by_recipient", ["recipientUserId"]),    // NEW INDEX
 });
