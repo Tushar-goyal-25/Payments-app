@@ -24,10 +24,28 @@ export default function SendMoney() {
     setIsSuccess(false);
 
     try {
+      // SECURITY: Email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(recipientEmail)) {
+        setError("Invalid email address");
+        return;
+      }
+
+      // SECURITY: Amount validation
       const amountNum = parseFloat(amount);
-      
-      if (amountNum <= 0) {
-        setError("Amount must be greater than 0");
+
+      if (isNaN(amountNum) || amountNum <= 0) {
+        setError("Invalid amount");
+        return;
+      }
+
+      if (amountNum < 0.01) {
+        setError("Minimum transfer is $0.01");
+        return;
+      }
+
+      if (amountNum > 10000) {
+        setError("Maximum transfer is $10,000");
         return;
       }
 
@@ -36,10 +54,13 @@ export default function SendMoney() {
         return;
       }
 
+      // SECURITY: Reference sanitization
+      const sanitizedReference = reference.slice(0, 200);
+
       await transferUSD({
-        recipientEmail,
+        recipientEmail: recipientEmail.toLowerCase().trim(),
         amount: amountNum,
-        reference: reference || "Transfer",
+        reference: sanitizedReference || "Transfer",
       });
 
       setIsSuccess(true);
@@ -85,12 +106,13 @@ export default function SendMoney() {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               step="0.01"
-              min="0"
+              min="0.01"
+              max="10000"
               required
             />
             {userBalance !== undefined && userBalance !== null && (
               <p className="text-xs text-muted-foreground">
-                Available: ${userBalance.toFixed(2)}
+                Available: ${userBalance.toFixed(2)} • Min: $0.01 • Max: $10,000
               </p>
             )}
           </div>
@@ -103,7 +125,11 @@ export default function SendMoney() {
               placeholder="What's this for?"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
+              maxLength={200}
             />
+            <p className="text-xs text-muted-foreground">
+              {reference.length}/200 characters
+            </p>
           </div>
 
           <Button

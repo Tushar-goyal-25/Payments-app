@@ -88,8 +88,12 @@ export default function PaymentForm() {
  const handleAmountChange = (value: string) => {
   setUsdAmount(value);
   const numValue = parseFloat(value);
-  if (!isNaN(numValue) && numValue > 0) {
+
+  // SECURITY: Amount validation
+  if (!isNaN(numValue) && numValue > 0 && numValue <= 10000) {
     setUsdcAmount(numValue.toFixed(2));
+  } else if (numValue > 10000) {
+    setUsdcAmount("10000.00"); // Cap at max
   } else {
     setUsdcAmount("0");
   }
@@ -157,9 +161,13 @@ export default function PaymentForm() {
               value={usdAmount}
               onChange={(e) => handleAmountChange(e.target.value)}
               step="0.01"
-              min="0"
+              min="0.01"
+              max="10000"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Min: $0.01 • Max: $10,000
+            </p>
           </div>
 
           <div className="space-y-2">

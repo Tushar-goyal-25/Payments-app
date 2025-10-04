@@ -144,9 +144,45 @@ export const transferUSD = mutation({
     const senderId = identity.subject;
     const senderEmail = identity.email || "unknown";
 
-    // Validate amount
+    // SECURITY: Rate limiting - max 10 transfers per hour
+    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+    const recentTransfers = await ctx.db
+      .query("transactions")
+      .withIndex("by_userId", (q) => q.eq("userId", senderId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("type"), "transfer_out"),
+          q.gt(q.field("timestamp"), oneHourAgo)
+        )
+      )
+      .collect();
+
+    if (recentTransfers.length >= 10) {
+      throw new Error("Transfer limit reached (10/hour). Try again later.");
+    }
+
+    // SECURITY: Amount validation
     if (args.amount <= 0) {
       throw new Error("Amount must be greater than 0");
+    }
+
+    if (args.amount < 0.01) {
+      throw new Error("Minimum transfer amount is $0.01");
+    }
+
+    if (args.amount > 10000) {
+      throw new Error("Maximum transfer amount is $10,000");
+    }
+
+    // SECURITY: Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(args.recipientEmail)) {
+      throw new Error("Invalid recipient email address");
+    }
+
+    // SECURITY: Reference sanitization (max 200 chars)
+    if (args.reference.length > 200) {
+      throw new Error("Reference note too long (max 200 characters)");
     }
 
     // Get sender's balance
