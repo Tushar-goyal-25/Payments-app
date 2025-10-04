@@ -88,7 +88,7 @@ export default function SendMoney() {
               min="0"
               required
             />
-            {userBalance !== undefined && (
+            {userBalance !== undefined && userBalance !== null && (
               <p className="text-xs text-muted-foreground">
                 Available: ${userBalance.toFixed(2)}
               </p>
