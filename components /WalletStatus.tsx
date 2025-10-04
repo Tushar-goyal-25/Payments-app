@@ -21,7 +21,7 @@ const erc20ABI = [
 
 const WalletStatus = () => {
     const { address, isConnected, chain } = useAccount()
-    const {data, isLoading} = useReadContracts({
+    const {data, isLoading, refetch} = useReadContracts({
         contracts: address && isConnected && chain && USDC_ADDRESSES[chain.id] ? [{
             address: USDC_ADDRESSES[chain.id],
             abi: erc20ABI,
@@ -29,13 +29,16 @@ const WalletStatus = () => {
             args: address ? [address] : undefined,
             chainId: chain.id,
         }] : [],
+        query: {
+            refetchInterval: 3000, // Refetch every 3 seconds
+        }
     });
 
  const balance = data?.[0]?.result;
   const formattedBalance = balance ? formatUnits(balance, 6) : '0'; // USDC has 6 decimals
   if (!isConnected) {
     return (
-      <Card className="w-[400px]">
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>Wallet Status</CardTitle>
         </CardHeader>
@@ -46,7 +49,7 @@ const WalletStatus = () => {
     );
   }
     return (
-            <Card className="w-[400px]">
+            <Card className="w-full">
       <CardHeader>
         <CardTitle>Wallet Status</CardTitle>
       </CardHeader>
